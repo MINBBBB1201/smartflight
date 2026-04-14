@@ -1,25 +1,47 @@
-// Dummy Google Auth functions for demonstration. Replace with real implementation as needed.
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  User,
+} from "firebase/auth";
+import app from "./firebase";
 
-export interface User {
-  name: string;
-  photo: string;
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+export async function signInWithGoogle(): Promise<void> {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (err: any) {
+    if (err.code === 'auth/popup-blocked') {
+      await signInWithRedirect(auth, provider);
+    } else {
+      throw err;
+    }
+  }
 }
 
-let currentUser: User | null = null;
-
-export function getUser(): User | null {
-  return currentUser;
-}
-
-export async function signInWithGoogle(): Promise<User> {
-  // Simulate Google sign-in
-  currentUser = {
-    name: "홍길동",
-    photo: "https://randomuser.me/api/portraits/men/1.jpg"
-  };
-  return currentUser;
+export async function handleRedirectResult(): Promise<User | null> {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) return result.user;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function signOut(): Promise<void> {
-  currentUser = null;
+  await firebaseSignOut(auth);
 }
+
+export function getUser(): User | null {
+  return auth.currentUser;
+}
+
+export { auth, onAuthStateChanged };
+export type { User };
