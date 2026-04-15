@@ -44,6 +44,16 @@ const PlaneIcon = () => (
   </svg>
 );
 
+const PlaneRightIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg
+    className={className}
+    fill="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" transform="rotate(-90 12 12)" />
+  </svg>
+);
+
 const SwapIcon = () => (
   <svg
     className="w-5 h-5"
@@ -172,35 +182,181 @@ const PlusIcon = () => (
   </svg>
 );
 
-const destinations = [
+const ArrowRightIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M14 5l7 7m0 0l-7 7m7-7H3"
+    />
+  </svg>
+);
+
+// Ticket-shaped container with notch cutouts
+const TicketCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`relative ${className}`}>
+    {/* Main card */}
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      {children}
+    </div>
+    {/* Left notch */}
+    <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-[#E8F4FD] rounded-full" />
+    {/* Right notch */}
+    <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-8 h-8 bg-[#E8F4FD] rounded-full" />
+  </div>
+);
+
+// Flight ticket card for results
+const FlightTicketCard = ({ 
+  airline, 
+  airlineLogo,
+  cabinClass,
+  from, 
+  to, 
+  fromCity,
+  toCity,
+  duration, 
+  stops, 
+  price,
+  departureTime,
+  arrivalTime
+}: { 
+  airline: string;
+  airlineLogo?: string;
+  cabinClass: string;
+  from: string;
+  to: string;
+  fromCity: string;
+  toCity: string;
+  duration: string;
+  stops: number;
+  price: number;
+  departureTime: string;
+  arrivalTime: string;
+}) => (
+  <div className="relative group">
+    {/* Main ticket */}
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow">
+      <div className="flex">
+        {/* Left section - Airline info */}
+        <div className="flex-1 p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
+            {airlineLogo ? (
+              <Image src={airlineLogo} alt={airline} width={40} height={40} className="object-contain" />
+            ) : (
+              <PlaneRightIcon className="w-6 h-6 text-primary" />
+            )}
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">{airline}</p>
+            <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full mt-1">
+              {cabinClass}
+            </span>
+          </div>
+        </div>
+
+        {/* Center section - Flight route */}
+        <div className="flex-[2] p-5 flex items-center justify-center gap-4">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-foreground">{from}</p>
+            <p className="text-xs text-muted">{fromCity}</p>
+            <p className="text-sm font-medium text-foreground mt-1">{departureTime}</p>
+          </div>
+          
+          {/* Flight path */}
+          <div className="flex-1 flex items-center gap-2 px-4">
+            <div className="h-0.5 flex-1 border-t-2 border-dashed border-gray-300" />
+            <div className="relative">
+              <PlaneRightIcon className="w-5 h-5 text-primary" />
+            </div>
+            <div className="h-0.5 flex-1 border-t-2 border-dashed border-gray-300" />
+          </div>
+          
+          <div className="text-center">
+            <p className="text-2xl font-bold text-foreground">{to}</p>
+            <p className="text-xs text-muted">{toCity}</p>
+            <p className="text-sm font-medium text-foreground mt-1">{arrivalTime}</p>
+          </div>
+        </div>
+
+        {/* Dashed divider */}
+        <div className="w-px border-l-2 border-dashed border-gray-200 my-4" />
+
+        {/* Right section - Price */}
+        <div className="w-48 p-5 flex flex-col items-center justify-center bg-gray-50/50">
+          <p className="text-sm text-muted mb-1">{duration} · {stops === 0 ? 'Direct' : `${stops} stop${stops > 1 ? 's' : ''}`}</p>
+          <p className="text-3xl font-bold text-foreground">${price.toLocaleString()}</p>
+          <button className="mt-3 px-5 py-2 bg-primary text-primary-foreground text-sm font-semibold rounded-full hover:bg-primary/90 transition">
+            Book Now
+          </button>
+        </div>
+      </div>
+    </div>
+    {/* Left notch */}
+    <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-6 h-6 bg-[#F0F4F8] rounded-full" />
+    {/* Right notch (between main content and price) */}
+    <div className="absolute right-48 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full border-2 border-dashed border-gray-200" style={{ clipPath: 'inset(0 50% 0 0)' }} />
+  </div>
+);
+
+// Sample flight data
+const sampleFlights = [
   {
-    city: "Tokyo",
-    country: "Japan",
-    image: "/images/tokyo.jpg",
-    dates: "Mar 15 - Mar 22",
-    price: 489,
+    id: '1',
+    airline: 'Turkish Airlines',
+    airlineLogo: '/images/turkish.png',
+    cabinClass: 'Economy',
+    from: 'ICN',
+    to: 'NRT',
+    fromCity: 'Seoul',
+    toCity: 'Tokyo',
+    departureTime: '08:30',
+    arrivalTime: '11:00',
+    duration: '2h 30m',
+    stops: 0,
+    price: 289,
   },
   {
-    city: "Paris",
-    country: "France",
-    image: "/images/paris.jpg",
-    dates: "Apr 10 - Apr 17",
-    price: 599,
+    id: '2',
+    airline: 'Korean Air',
+    airlineLogo: '/images/koreanair.png',
+    cabinClass: 'Business',
+    from: 'ICN',
+    to: 'LAX',
+    fromCity: 'Seoul',
+    toCity: 'Los Angeles',
+    departureTime: '13:45',
+    arrivalTime: '09:20',
+    duration: '11h 35m',
+    stops: 0,
+    price: 1249,
   },
   {
-    city: "Bali",
-    country: "Indonesia",
-    image: "/images/bali.jpg",
-    dates: "May 5 - May 12",
-    price: 449,
+    id: '3',
+    airline: 'Asiana Airlines',
+    airlineLogo: '/images/asiana.png',
+    cabinClass: 'Economy',
+    from: 'ICN',
+    to: 'CDG',
+    fromCity: 'Seoul',
+    toCity: 'Paris',
+    departureTime: '10:15',
+    arrivalTime: '16:30',
+    duration: '12h 15m',
+    stops: 1,
+    price: 687,
   },
 ];
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
-  const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">(
-    "roundtrip"
-  );
+  const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">("roundtrip");
   const [from, setFrom] = useState("ICN");
   const [fromCity, setFromCity] = useState("Seoul");
   const [to, setTo] = useState("NRT");
@@ -222,6 +378,7 @@ export default function Home() {
   const [alertPrice, setAlertPrice] = useState("");
   const [matchedAlert, setMatchedAlert] = useState<PriceAlert | null>(null);
   const [showResults, setShowResults] = useState(false);
+  const [showOffers, setShowOffers] = useState(true);
 
   useEffect(() => {
     handleRedirectResult().then((u) => {
@@ -423,13 +580,25 @@ export default function Home() {
       null
     );
 
+  const totalPassengers = adults + children + infants;
+
+  const getCabinClassLabel = (cls: string) => {
+    switch (cls) {
+      case 'economy': return 'Economy';
+      case 'premium_economy': return 'Premium';
+      case 'business': return 'Business';
+      case 'first': return 'First';
+      default: return 'Economy';
+    }
+  };
+
   return (
     <main className="min-h-screen bg-background text-foreground">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
               <PlaneIcon />
             </div>
             <span className="text-xl font-bold text-foreground">SmartFlight</span>
@@ -461,7 +630,7 @@ export default function Home() {
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="px-4 py-2 rounded-full bg-card border border-border text-sm font-medium hover:bg-border/50 transition"
+                  className="px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-sm font-medium hover:bg-gray-200 transition"
                 >
                   Sign Out
                 </button>
@@ -469,7 +638,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={handleSignIn}
-                className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25"
+                className="px-5 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25"
               >
                 Sign In
               </button>
@@ -478,333 +647,343 @@ export default function Home() {
         </div>
       </nav>
 
-{/* Hero Section */}
-        <section className="relative min-h-[90vh] pt-16 overflow-hidden">
-          {/* Clean light gradient background: #F0F4F8 to #FFFFFF */}
-          <div 
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(135deg, #F0F4F8 0%, #FFFFFF 50%, #F8FAFC 100%)',
-            }}
-          />
+      {/* Hero Section with Sky Background */}
+      <section className="relative min-h-screen pt-16 overflow-hidden">
+        {/* Sky gradient background */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(180deg, #E8F4FD 0%, #F0F7FC 40%, #FFFFFF 100%)',
+          }}
+        />
         
-          <div className="relative max-w-7xl mx-auto px-6 pt-20 lg:pt-32">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Headline */}
-            <div className="space-y-6">
-              <h1 className="text-balance">
-                <span className="block text-4xl md:text-5xl lg:text-6xl font-light text-foreground/80 leading-tight">
-                  Discover New
-                </span>
-                <span className="block text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground leading-tight">
-                  <span className="text-primary">Horizons</span> Today
-                </span>
-              </h1>
-              <p className="text-lg text-muted max-w-md leading-relaxed">
-                Find the best flight deals worldwide and start your next adventure with confidence. Smart search, better prices.
-              </p>
-            </div>
-            
-{/* Right: Airplane Image with CSS Mask Fade - No container box */}
+        {/* Cloud shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <svg className="absolute top-20 left-10 w-64 h-32 text-white/60" viewBox="0 0 200 100" fill="currentColor">
+            <ellipse cx="50" cy="60" rx="50" ry="30" />
+            <ellipse cx="100" cy="50" rx="60" ry="40" />
+            <ellipse cx="150" cy="60" rx="50" ry="30" />
+          </svg>
+          <svg className="absolute top-32 right-20 w-80 h-40 text-white/50" viewBox="0 0 200 100" fill="currentColor">
+            <ellipse cx="50" cy="60" rx="50" ry="30" />
+            <ellipse cx="100" cy="50" rx="60" ry="40" />
+            <ellipse cx="150" cy="60" rx="50" ry="30" />
+          </svg>
+          <svg className="absolute top-48 left-1/3 w-48 h-24 text-white/40" viewBox="0 0 200 100" fill="currentColor">
+            <ellipse cx="50" cy="60" rx="50" ry="30" />
+            <ellipse cx="100" cy="50" rx="60" ry="40" />
+            <ellipse cx="150" cy="60" rx="50" ry="30" />
+          </svg>
+        </div>
+
+        <div className="relative max-w-5xl mx-auto px-6 pt-12">
+          {/* Title */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+              Smart Flight Finder
+            </h1>
+            <p className="text-lg text-muted max-w-xl mx-auto">
+              Compare prices from hundreds of airlines and find the best deals for your next adventure
+            </p>
+          </div>
+
+          {/* Airplane Image */}
+          <div className="relative w-full flex justify-center mb-[-60px] z-10">
             <div 
-              className="relative lg:absolute lg:right-[-5%] lg:top-1/2 lg:-translate-y-1/2 lg:w-[60%] lg:h-[700px] pointer-events-none"
+              className="relative w-[500px] h-[200px]"
               style={{
-                maskImage: 'linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to top, transparent 0%, black 25%)',
-                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to top, transparent 0%, black 25%)',
-                maskComposite: 'intersect',
-                WebkitMaskComposite: 'destination-in',
+                filter: 'drop-shadow(0 30px 40px rgba(0,0,0,0.15))',
               }}
             >
               <Image
-                src="/images/airplane-hero.jpg"
-                alt="Airplane floating in the sky"
+                src="https://images.unsplash.com/photo-1570710891163-6d3b5c47248b?w=900&auto=format&fit=crop&q=80"
+                alt="Airplane"
                 fill
-                className="object-contain object-center lg:object-right scale-105"
+                className="object-contain"
                 style={{
-                  filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.12))',
+                  maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
+                  WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
                 }}
                 priority
               />
             </div>
           </div>
-        </div>
 
-        {/* Search Panel */}
-        <div className="relative max-w-5xl mx-auto px-6 mt-12 lg:mt-16">
-          <div className="bg-card rounded-2xl shadow-xl shadow-foreground/5 p-6 border border-border/50">
-            {/* Trip Type Toggle */}
-            <div className="flex gap-2 mb-6">
-              {[
-                { value: "oneway", label: "One Way" },
-                { value: "roundtrip", label: "Round Trip" },
-                { value: "multicity", label: "Multi City" },
-              ].map((type) => (
-                <button
-                  key={type.value}
-                  onClick={() => setTripType(type.value as any)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                    tripType === type.value
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background text-muted hover:text-foreground"
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Search Fields - Row 1: From, To */}
-            <div className="grid md:grid-cols-[1fr,auto,1fr] gap-4 items-end">
-              {/* From */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                  From
-                </label>
-                <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer flex items-center">
-                  <div className="flex-1">
-                    <input
-                      value={from}
-                      onChange={(e) => setFrom(e.target.value.toUpperCase())}
-                      className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
-                      placeholder="ICN"
-                      maxLength={3}
-                    />
-                    <input
-                      value={fromCity}
-                      onChange={(e) => setFromCity(e.target.value)}
-                      className="w-full text-xs text-muted bg-transparent outline-none -mt-1"
-                      placeholder="Seoul, Korea"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Swap Button */}
+          {/* Trip Type Pills */}
+          <div className="flex justify-center gap-2 mb-4 relative z-20">
+            {[
+              { value: "oneway", label: "One Way" },
+              { value: "roundtrip", label: "Round Trip" },
+              { value: "multicity", label: "Multi City" },
+            ].map((type) => (
               <button
-                onClick={swapLocations}
-                className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-muted hover:text-primary hover:border-primary transition mb-1"
+                key={type.value}
+                onClick={() => setTripType(type.value as any)}
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition ${
+                  tripType === type.value
+                    ? "bg-primary text-white shadow-lg shadow-primary/25"
+                    : "bg-white text-muted hover:text-foreground border border-gray-200"
+                }`}
               >
-                <SwapIcon />
+                {type.label}
               </button>
+            ))}
+          </div>
 
-              {/* To */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                  To
-                </label>
-                <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer flex items-center">
-                  <div className="flex-1">
-                    <input
-                      value={to}
-                      onChange={(e) => setTo(e.target.value.toUpperCase())}
-                      className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
-                      placeholder="NRT"
-                      maxLength={3}
-                    />
-                    <input
-                      value={toCity}
-                      onChange={(e) => setToCity(e.target.value)}
-                      className="w-full text-xs text-muted bg-transparent outline-none -mt-1"
-                      placeholder="Tokyo, Japan"
-                    />
+          {/* Ticket-Shaped Search Panel */}
+          <TicketCard className="relative z-20">
+            <div className="flex flex-col md:flex-row">
+              {/* Left Section: FROM */}
+              <div className="flex-1 p-6 md:pl-10">
+                <div className="space-y-4">
+                  {/* From */}
+                  <div>
+                    <label className="text-xs font-medium text-muted uppercase tracking-wide">From</label>
+                    <div className="flex items-center gap-3 mt-1">
+                      <input
+                        value={from}
+                        onChange={(e) => setFrom(e.target.value.toUpperCase())}
+                        className="text-3xl font-bold text-foreground bg-transparent outline-none w-20"
+                        placeholder="ICN"
+                        maxLength={3}
+                      />
+                      <input
+                        value={fromCity}
+                        onChange={(e) => setFromCity(e.target.value)}
+                        className="text-sm text-muted bg-transparent outline-none flex-1"
+                        placeholder="Seoul, Korea"
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Search Fields - Row 2: Dates, Passengers, Cabin Class, Search */}
-            <div className={`grid gap-4 items-end mt-4 ${tripType === "roundtrip" ? "md:grid-cols-[1fr,1fr,1fr,1fr,auto]" : "md:grid-cols-[1fr,1fr,1fr,auto]"}`}>
-              {/* Departure Date */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                  Departure
-                </label>
-                <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
-                  <CalendarIcon />
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="flex-1 text-foreground bg-transparent outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Return Date - Only for Round Trip */}
-              {tripType === "roundtrip" && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                    Return
-                  </label>
-                  <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
-                    <CalendarIcon />
-                    <input
-                      type="date"
-                      value={returnDate}
-                      onChange={(e) => setReturnDate(e.target.value)}
-                      className="flex-1 text-foreground bg-transparent outline-none"
-                    />
+                  {/* Date */}
+                  <div>
+                    <label className="text-xs font-medium text-muted uppercase tracking-wide">Departure</label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <CalendarIcon />
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        className="text-foreground bg-transparent outline-none"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* Passengers */}
-              <div className="space-y-1.5 relative">
-                <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                  Passengers
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassengerPopover(!showPassengerPopover)}
-                  className="w-full h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2 text-left"
-                >
-                  <UserIcon />
-                  <span className="flex-1 text-foreground text-sm">
-                    {adults} Adult{adults > 1 ? "s" : ""}
-                    {children > 0 && `, ${children} Child${children > 1 ? "ren" : ""}`}
-                    {infants > 0 && `, ${infants} Infant${infants > 1 ? "s" : ""}`}
-                  </span>
-                  <ChevronDownIcon />
-                </button>
-                
-                {/* Passenger Popover */}
-                {showPassengerPopover && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl border border-border shadow-xl z-50 p-4 space-y-4">
-                    {/* Adults */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Adults</p>
-                        <p className="text-xs text-muted">12+ years</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setAdults(Math.max(1, adults - 1))}
-                          disabled={adults <= 1}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <MinusIcon />
-                        </button>
-                        <span className="w-6 text-center font-medium text-foreground">{adults}</span>
-                        <button
-                          type="button"
-                          onClick={() => setAdults(Math.min(9, adults + 1))}
-                          disabled={adults >= 9}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <PlusIcon />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Children */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Children</p>
-                        <p className="text-xs text-muted">2-11 years</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setChildren(Math.max(0, children - 1))}
-                          disabled={children <= 0}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <MinusIcon />
-                        </button>
-                        <span className="w-6 text-center font-medium text-foreground">{children}</span>
-                        <button
-                          type="button"
-                          onClick={() => setChildren(Math.min(9, children + 1))}
-                          disabled={children >= 9}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <PlusIcon />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Infants */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">Infants</p>
-                        <p className="text-xs text-muted">Under 2 years</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setInfants(Math.max(0, infants - 1))}
-                          disabled={infants <= 0}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <MinusIcon />
-                        </button>
-                        <span className="w-6 text-center font-medium text-foreground">{infants}</span>
-                        <button
-                          type="button"
-                          onClick={() => setInfants(Math.min(adults, infants + 1))}
-                          disabled={infants >= adults}
-                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
-                        >
-                          <PlusIcon />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Done Button */}
+                  {/* Passengers */}
+                  <div className="relative">
+                    <label className="text-xs font-medium text-muted uppercase tracking-wide">Passengers</label>
                     <button
                       type="button"
-                      onClick={() => setShowPassengerPopover(false)}
-                      className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition"
+                      onClick={() => setShowPassengerPopover(!showPassengerPopover)}
+                      className="flex items-center gap-2 mt-1 text-foreground"
                     >
-                      Done
+                      <UserIcon />
+                      <span className="text-sm">
+                        {totalPassengers} Passenger{totalPassengers > 1 ? "s" : ""}
+                      </span>
+                      <ChevronDownIcon />
                     </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Cabin Class */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                  Cabin Class
-                </label>
-                <div className="relative">
-                  <select
-                    value={cabinClass}
-                    onChange={(e) => setCabinClass(e.target.value as any)}
-                    className="w-full h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition text-foreground outline-none appearance-none cursor-pointer pr-10"
-                  >
-                    <option value="economy">Economy</option>
-                    <option value="premium_economy">Premium Economy</option>
-                    <option value="business">Business</option>
-                    <option value="first">First Class</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
-                    <ChevronDownIcon />
+                    
+                    {/* Passenger Popover */}
+                    {showPassengerPopover && (
+                      <div className="absolute top-full left-0 mt-2 bg-white rounded-xl border border-gray-200 shadow-xl z-50 p-4 space-y-4 w-64">
+                        {/* Adults */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Adults</p>
+                            <p className="text-xs text-muted">12+ years</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setAdults(Math.max(1, adults - 1))}
+                              disabled={adults <= 1}
+                              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <MinusIcon />
+                            </button>
+                            <span className="w-6 text-center font-medium text-foreground">{adults}</span>
+                            <button
+                              type="button"
+                              onClick={() => setAdults(Math.min(9, adults + 1))}
+                              disabled={adults >= 9}
+                              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <PlusIcon />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Children */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Children</p>
+                            <p className="text-xs text-muted">2-11 years</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setChildren(Math.max(0, children - 1))}
+                              disabled={children <= 0}
+                              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <MinusIcon />
+                            </button>
+                            <span className="w-6 text-center font-medium text-foreground">{children}</span>
+                            <button
+                              type="button"
+                              onClick={() => setChildren(Math.min(9, children + 1))}
+                              disabled={children >= 9}
+                              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <PlusIcon />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Infants */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Infants</p>
+                            <p className="text-xs text-muted">Under 2 years</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => setInfants(Math.max(0, infants - 1))}
+                              disabled={infants <= 0}
+                              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <MinusIcon />
+                            </button>
+                            <span className="w-6 text-center font-medium text-foreground">{infants}</span>
+                            <button
+                              type="button"
+                              onClick={() => setInfants(Math.min(adults, infants + 1))}
+                              disabled={infants >= adults}
+                              className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                              <PlusIcon />
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Done Button */}
+                        <button
+                          type="button"
+                          onClick={() => setShowPassengerPopover(false)}
+                          className="w-full py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition"
+                        >
+                          Done
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Search Button */}
-              <button
-                onClick={handleSearch}
-                disabled={loading}
-                className="h-[52px] px-8 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25 flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <SearchIcon />
-                <span className="hidden sm:inline">{loading ? "Searching..." : "Search"}</span>
-              </button>
+              {/* Center Divider with Plane */}
+              <div className="flex flex-col items-center justify-center px-4 py-6">
+                <div className="h-full border-l-2 border-dashed border-gray-300 relative">
+                  <button
+                    onClick={swapLocations}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white shadow-lg hover:bg-primary/90 transition"
+                  >
+                    <PlaneRightIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Section: TO */}
+              <div className="flex-1 p-6 md:pr-10">
+                <div className="space-y-4">
+                  {/* To */}
+                  <div>
+                    <label className="text-xs font-medium text-muted uppercase tracking-wide">To</label>
+                    <div className="flex items-center gap-3 mt-1">
+                      <input
+                        value={to}
+                        onChange={(e) => setTo(e.target.value.toUpperCase())}
+                        className="text-3xl font-bold text-foreground bg-transparent outline-none w-20"
+                        placeholder="NRT"
+                        maxLength={3}
+                      />
+                      <input
+                        value={toCity}
+                        onChange={(e) => setToCity(e.target.value)}
+                        className="text-sm text-muted bg-transparent outline-none flex-1"
+                        placeholder="Tokyo, Japan"
+                      />
+                    </div>
+                  </div>
+                  {/* Return Date */}
+                  <div>
+                    <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                      {tripType === "roundtrip" ? "Return" : "Flexible"}
+                    </label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <CalendarIcon />
+                      {tripType === "roundtrip" ? (
+                        <input
+                          type="date"
+                          value={returnDate}
+                          onChange={(e) => setReturnDate(e.target.value)}
+                          className="text-foreground bg-transparent outline-none"
+                        />
+                      ) : (
+                        <span className="text-muted text-sm">Add return</span>
+                      )}
+                    </div>
+                  </div>
+                  {/* Cabin Class */}
+                  <div>
+                    <label className="text-xs font-medium text-muted uppercase tracking-wide">Cabin Class</label>
+                    <div className="relative mt-1">
+                      <select
+                        value={cabinClass}
+                        onChange={(e) => setCabinClass(e.target.value as any)}
+                        className="text-foreground bg-transparent outline-none appearance-none cursor-pointer pr-6"
+                      >
+                        <option value="economy">Economy</option>
+                        <option value="premium_economy">Premium Economy</option>
+                        <option value="business">Business</option>
+                        <option value="first">First Class</option>
+                      </select>
+                      <ChevronDownIcon />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {error && (
-              <p className="mt-4 text-red-500 text-sm text-center">{error}</p>
-            )}
-          </div>
+            {/* Search Button - Barcode Strip Style */}
+            <button
+              onClick={handleSearch}
+              disabled={loading}
+              className="w-full py-4 bg-primary text-white font-semibold text-lg flex items-center justify-center gap-3 hover:bg-primary/90 transition disabled:opacity-50"
+              style={{
+                borderBottomLeftRadius: '1rem',
+                borderBottomRightRadius: '1rem',
+              }}
+            >
+              {loading ? (
+                "Searching..."
+              ) : (
+                <>
+                  Search Flights
+                  <ArrowRightIcon />
+                </>
+              )}
+            </button>
+          </TicketCard>
+
+          {error && (
+            <p className="mt-4 text-red-500 text-sm text-center">{error}</p>
+          )}
         </div>
       </section>
 
       {/* Stats Bar */}
-      <section className="py-16 bg-card border-y border-border/50">
+      <section className="py-16 bg-white border-y border-gray-100">
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
@@ -824,10 +1003,53 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Popular Flights Section */}
+      {!showResults && (
+        <section className="py-20 bg-[#F8FAFC]">
+          <div className="max-w-5xl mx-auto px-6">
+            {/* Section Header */}
+            <div className="flex items-center justify-between mb-10">
+              <h2 className="text-3xl font-bold text-foreground">
+                Choose Your Perfect Flight
+              </h2>
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-muted">Show Offers</span>
+                <button
+                  onClick={() => setShowOffers(!showOffers)}
+                  className={`relative w-12 h-6 rounded-full transition ${showOffers ? 'bg-primary' : 'bg-gray-300'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${showOffers ? 'translate-x-7' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Flight Cards */}
+            <div className="space-y-4">
+              {sampleFlights.map((flight) => (
+                <FlightTicketCard
+                  key={flight.id}
+                  airline={flight.airline}
+                  cabinClass={flight.cabinClass}
+                  from={flight.from}
+                  to={flight.to}
+                  fromCity={flight.fromCity}
+                  toCity={flight.toCity}
+                  departureTime={flight.departureTime}
+                  arrivalTime={flight.arrivalTime}
+                  duration={flight.duration}
+                  stops={flight.stops}
+                  price={flight.price}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Search Results */}
       {showResults && (
-        <section className="py-16 bg-background">
-          <div className="max-w-4xl mx-auto px-6">
+        <section className="py-16 bg-[#F8FAFC]">
+          <div className="max-w-5xl mx-auto px-6">
             {results.length > 0 ? (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-foreground">
@@ -852,7 +1074,7 @@ export default function Home() {
                     </h3>
                     <div className="grid md:grid-cols-2 gap-4">
                       {cheapestDirect && (
-                        <div className="bg-card rounded-xl p-5 border border-primary/30 shadow-sm">
+                        <div className="bg-white rounded-xl p-5 border border-primary/30 shadow-sm">
                           <div className="flex items-center gap-2 mb-3">
                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                               <PlaneIcon />
@@ -874,7 +1096,7 @@ export default function Home() {
                         </div>
                       )}
                       {cheapestConnecting && (
-                        <div className="bg-card rounded-xl p-5 border border-amber-300/50 shadow-sm">
+                        <div className="bg-white rounded-xl p-5 border border-amber-300/50 shadow-sm">
                           <div className="flex items-center gap-2 mb-3">
                             <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                               <SwapIcon />
@@ -919,14 +1141,14 @@ export default function Home() {
                 )}
 
                 {/* Sort Tabs */}
-                <div className="flex gap-1 bg-background rounded-xl p-1 border border-border">
+                <div className="flex gap-1 bg-white rounded-xl p-1 border border-gray-200">
                   {(["price", "duration", "ai"] as const).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setSortTab(tab)}
                       className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition ${
                         sortTab === tab
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-primary text-white"
                           : "text-muted hover:text-foreground"
                       }`}
                     >
@@ -939,33 +1161,23 @@ export default function Home() {
                   ))}
                 </div>
 
-                {/* Results List */}
-                <div className="space-y-3">
+                {/* Results List as Ticket Cards */}
+                <div className="space-y-4">
                   {getSortedResults().map((offer) => (
-                    <div
+                    <FlightTicketCard
                       key={offer.id}
-                      className="bg-card rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border/50 hover:border-primary/30 hover:shadow-md transition"
-                    >
-                      <div className="flex-1">
-                        <p className="font-bold text-foreground">
-                          {offer.airline ?? "Unknown Airline"}
-                        </p>
-                        <p className="text-sm text-muted mt-1">
-                          {offer.departure?.slice(11, 16)} →{" "}
-                          {offer.arrival?.slice(11, 16)}
-                          {" · "}
-                          {offer.stops === 0
-                            ? "Direct"
-                            : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">
-                          ${Number(offer.price).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-muted">{offer.currency}</p>
-                      </div>
-                    </div>
+                      airline={offer.airline ?? "Unknown Airline"}
+                      cabinClass={getCabinClassLabel(cabinClass)}
+                      from={from}
+                      to={to}
+                      fromCity={fromCity}
+                      toCity={toCity}
+                      departureTime={offer.departure?.slice(11, 16) ?? '--:--'}
+                      arrivalTime={offer.arrival?.slice(11, 16) ?? '--:--'}
+                      duration={`${Math.floor(calculateDuration(offer.departure, offer.arrival) / 3600000)}h ${Math.floor((calculateDuration(offer.departure, offer.arrival) % 3600000) / 60000)}m`}
+                      stops={offer.stops ?? 0}
+                      price={Number(offer.price)}
+                    />
                   ))}
                 </div>
 
@@ -973,14 +1185,14 @@ export default function Home() {
                 <button
                   onClick={handlePriceTrend}
                   disabled={chartLoading}
-                  className="w-full py-3 rounded-xl bg-card border border-border text-foreground text-sm font-medium hover:bg-background transition disabled:opacity-50"
+                  className="w-full py-3 rounded-xl bg-white border border-gray-200 text-foreground text-sm font-medium hover:bg-gray-50 transition disabled:opacity-50"
                 >
                   {chartLoading ? "Loading price trends..." : "View Price Trends"}
                 </button>
 
                 {/* Price Chart */}
                 {priceChartData.length > 0 && (
-                  <div className="bg-card rounded-xl p-6 border border-border/50">
+                  <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                     <h3 className="text-lg font-semibold text-foreground mb-4">
                       Price Trends (±7 days)
                     </h3>
@@ -1054,7 +1266,7 @@ export default function Home() {
                 )}
 
                 {/* Price Alert */}
-                <div className="bg-card rounded-xl p-6 border border-border/50">
+                <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm">
                   <h3 className="text-lg font-semibold text-foreground mb-4">
                     Set Price Alert
                   </h3>
@@ -1064,12 +1276,12 @@ export default function Home() {
                       value={alertPrice}
                       onChange={(e) => setAlertPrice(e.target.value)}
                       placeholder="Target price (USD)"
-                      className="flex-1 p-3 rounded-xl bg-background text-foreground border border-border placeholder-muted outline-none focus:border-primary transition"
+                      className="flex-1 p-3 rounded-xl bg-gray-50 text-foreground border border-gray-200 placeholder-gray-400 outline-none focus:border-primary transition"
                     />
                     <button
                       onClick={handleAddAlert}
                       disabled={!alertPrice}
-                      className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+                      className="px-6 py-3 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 transition disabled:opacity-50"
                     >
                       Set Alert
                     </button>
@@ -1082,7 +1294,7 @@ export default function Home() {
                       {alerts.map((alert) => (
                         <div
                           key={alert.id}
-                          className="flex justify-between items-center bg-background p-3 rounded-xl border border-border"
+                          className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-200"
                         >
                           <div>
                             <p className="text-sm font-semibold text-foreground">
@@ -1113,58 +1325,12 @@ export default function Home() {
         </section>
       )}
 
-      {/* Popular Destinations */}
-      {!showResults && (
-        <section className="py-20 bg-background">
-          <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground text-center mb-4">
-              Explore Top Destinations
-            </h2>
-            <p className="text-muted text-center mb-12 max-w-2xl mx-auto">
-              Discover amazing places around the world with our curated selection of popular destinations
-            </p>
-            <div className="grid md:grid-cols-3 gap-6">
-              {destinations.map((dest, i) => (
-                <div
-                  key={i}
-                  className="group relative rounded-2xl overflow-hidden h-80 cursor-pointer transform hover:scale-[1.02] transition duration-300"
-                >
-                  <Image
-                    src={dest.image}
-                    alt={dest.city}
-                    fill
-                    className="object-cover group-hover:scale-110 transition duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <h3 className="text-xl font-bold text-white">
-                          {dest.city}
-                        </h3>
-                        <p className="text-white/70 text-sm">{dest.dates}</p>
-                      </div>
-                      <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
-                        <p className="text-xs text-muted">Economy From</p>
-                        <p className="text-sm font-bold text-foreground">
-                          USD ${dest.price}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Footer */}
-      <footer className="py-12 bg-card border-t border-border/50">
+      <footer className="py-12 bg-white border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
                 <PlaneIcon />
               </div>
               <span className="text-xl font-bold text-foreground">SmartFlight</span>
