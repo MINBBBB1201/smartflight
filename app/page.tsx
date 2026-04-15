@@ -505,28 +505,26 @@ export default function Home() {
               </p>
             </div>
             
-{/* Right: Airplane Image with CSS Mask Fade */}
-            <div className="relative lg:absolute lg:right-[-5%] lg:top-1/2 lg:-translate-y-1/2 lg:w-[60%] lg:h-[700px] pointer-events-none">
-              <div 
-                className="relative w-full h-[400px] lg:h-full"
+{/* Right: Airplane Image with CSS Mask Fade - No container box */}
+            <div 
+              className="relative lg:absolute lg:right-[-5%] lg:top-1/2 lg:-translate-y-1/2 lg:w-[60%] lg:h-[700px] pointer-events-none"
+              style={{
+                maskImage: 'linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to top, transparent 0%, black 25%)',
+                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 30%), linear-gradient(to top, transparent 0%, black 25%)',
+                maskComposite: 'intersect',
+                WebkitMaskComposite: 'destination-in',
+              }}
+            >
+              <Image
+                src="/images/airplane-hero.jpg"
+                alt="Airplane floating in the sky"
+                fill
+                className="object-contain object-center lg:object-right scale-105"
                 style={{
-                  maskImage: 'linear-gradient(to right, transparent 0%, black 25%), linear-gradient(to top, transparent 0%, black 20%)',
-                  WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 25%), linear-gradient(to top, transparent 0%, black 20%)',
-                  maskComposite: 'intersect',
-                  WebkitMaskComposite: 'source-in',
+                  filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.12))',
                 }}
-              >
-                <Image
-                  src="/images/airplane-hero.jpg"
-                  alt="Airplane floating in the sky"
-                  fill
-                  className="object-contain object-center lg:object-right scale-110"
-                  style={{
-                    filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.15))',
-                  }}
-                  priority
-                />
-              </div>
+                priority
+              />
             </div>
           </div>
         </div>
