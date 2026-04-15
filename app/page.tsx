@@ -478,11 +478,15 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] pt-16 overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/10" />
-        <div className="absolute top-1/2 right-0 w-[800px] h-[800px] bg-gradient-radial from-accent/20 via-primary/10 to-transparent rounded-full blur-3xl transform translate-x-1/4 -translate-y-1/2" />
+{/* Hero Section */}
+  <section className="relative min-h-[90vh] pt-16 overflow-hidden">
+  {/* Clean light gradient background: #F0F4F8 to #FFFFFF */}
+  <div 
+    className="absolute inset-0"
+    style={{
+      background: 'linear-gradient(135deg, #F0F4F8 0%, #FFFFFF 50%, #F8FAFC 100%)',
+    }}
+  />
         
         <div className="relative max-w-7xl mx-auto px-6 pt-20 lg:pt-32">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -501,17 +505,31 @@ export default function Home() {
               </p>
             </div>
             
-            {/* Right: Airplane Image */}
-            <div className="relative lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:w-[55%] lg:h-[600px]">
-              <div className="relative w-full h-[400px] lg:h-full">
-                <Image
-                  src="/images/airplane-hero.jpg"
-                  alt="Airplane"
-                  fill
-                  className="object-contain object-center lg:object-right drop-shadow-2xl"
-                  priority
-                />
-              </div>
+{/* Right: Airplane Image with CSS Mask Fade */}
+  <div className="relative lg:absolute lg:right-[-5%] lg:top-1/2 lg:-translate-y-1/2 lg:w-[60%] lg:h-[700px] pointer-events-none">
+  <div 
+    className="relative w-full h-[400px] lg:h-full"
+    style={{
+      maskImage: 'linear-gradient(to right, transparent 0%, black 25%), linear-gradient(to top, transparent 0%, black 20%)',
+      WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 25%), linear-gradient(to top, transparent 0%, black 20%)',
+      maskComposite: 'intersect',
+      WebkitMaskComposite: 'source-in',
+    }}
+  >
+  <Image
+    src="/images/airplane-hero.jpg"
+    alt="Airplane floating in the sky"
+    fill
+    className="object-contain object-center lg:object-right scale-110"
+    style={{
+      filter: 'drop-shadow(0 25px 50px rgba(0,0,0,0.15))',
+    }}
+    priority
+  />
+  </div>
+  </div>
+  </div>
+  </div>
             </div>
           </div>
         </div>
