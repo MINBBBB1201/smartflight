@@ -108,6 +108,70 @@ const GlobeIcon = () => (
   </svg>
 );
 
+const UserIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+    />
+  </svg>
+);
+
+const ChevronDownIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M19 9l-7 7-7-7"
+    />
+  </svg>
+);
+
+const MinusIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M20 12H4"
+    />
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 4v16m8-8H4"
+    />
+  </svg>
+);
+
 const destinations = [
   {
     city: "Tokyo",
@@ -143,7 +207,11 @@ export default function Home() {
   const [toCity, setToCity] = useState("Tokyo");
   const [date, setDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
-  const [passengers, setPassengers] = useState(1);
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
+  const [cabinClass, setCabinClass] = useState<"economy" | "premium_economy" | "business" | "first">("economy");
+  const [showPassengerPopover, setShowPassengerPopover] = useState(false);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [error, setError] = useState("");
@@ -215,7 +283,10 @@ export default function Home() {
           origin: from.trim().toUpperCase(),
           destination: to.trim().toUpperCase(),
           departureDate: date,
-          adults: passengers,
+          adults: adults,
+          children: children,
+          infants: infants,
+          cabinClass: cabinClass,
         }),
       });
       const data = await res.json();
@@ -283,7 +354,7 @@ export default function Home() {
             origin: from.trim().toUpperCase(),
             destination: to.trim().toUpperCase(),
             departureDate: dateStr,
-            adults: passengers,
+            adults: adults,
           }),
         });
         const data = await res.json();
@@ -469,34 +540,36 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Search Fields */}
-            <div className="grid md:grid-cols-[1fr,auto,1fr,1fr,1fr,auto] gap-4 items-end">
+            {/* Search Fields - Row 1: From, To */}
+            <div className="grid md:grid-cols-[1fr,auto,1fr] gap-4 items-end">
               {/* From */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted uppercase tracking-wide">
                   From
                 </label>
-                <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer">
-                  <input
-                    value={from}
-                    onChange={(e) => setFrom(e.target.value.toUpperCase())}
-                    className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
-                    placeholder="ICN"
-                    maxLength={3}
-                  />
-                  <input
-                    value={fromCity}
-                    onChange={(e) => setFromCity(e.target.value)}
-                    className="w-full text-sm text-muted bg-transparent outline-none"
-                    placeholder="Seoul, Korea"
-                  />
+                <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer flex items-center">
+                  <div className="flex-1">
+                    <input
+                      value={from}
+                      onChange={(e) => setFrom(e.target.value.toUpperCase())}
+                      className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
+                      placeholder="ICN"
+                      maxLength={3}
+                    />
+                    <input
+                      value={fromCity}
+                      onChange={(e) => setFromCity(e.target.value)}
+                      className="w-full text-xs text-muted bg-transparent outline-none -mt-1"
+                      placeholder="Seoul, Korea"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Swap Button */}
               <button
                 onClick={swapLocations}
-                className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-muted hover:text-primary hover:border-primary transition mb-3"
+                className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-muted hover:text-primary hover:border-primary transition mb-1"
               >
                 <SwapIcon />
               </button>
@@ -506,29 +579,34 @@ export default function Home() {
                 <label className="text-xs font-medium text-muted uppercase tracking-wide">
                   To
                 </label>
-                <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer">
-                  <input
-                    value={to}
-                    onChange={(e) => setTo(e.target.value.toUpperCase())}
-                    className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
-                    placeholder="NRT"
-                    maxLength={3}
-                  />
-                  <input
-                    value={toCity}
-                    onChange={(e) => setToCity(e.target.value)}
-                    className="w-full text-sm text-muted bg-transparent outline-none"
-                    placeholder="Tokyo, Japan"
-                  />
+                <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer flex items-center">
+                  <div className="flex-1">
+                    <input
+                      value={to}
+                      onChange={(e) => setTo(e.target.value.toUpperCase())}
+                      className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
+                      placeholder="NRT"
+                      maxLength={3}
+                    />
+                    <input
+                      value={toCity}
+                      onChange={(e) => setToCity(e.target.value)}
+                      className="w-full text-xs text-muted bg-transparent outline-none -mt-1"
+                      placeholder="Tokyo, Japan"
+                    />
+                  </div>
                 </div>
               </div>
+            </div>
 
+            {/* Search Fields - Row 2: Dates, Passengers, Cabin Class, Search */}
+            <div className={`grid gap-4 items-end mt-4 ${tripType === "roundtrip" ? "md:grid-cols-[1fr,1fr,1fr,1fr,auto]" : "md:grid-cols-[1fr,1fr,1fr,auto]"}`}>
               {/* Departure Date */}
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted uppercase tracking-wide">
                   Departure
                 </label>
-                <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
+                <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
                   <CalendarIcon />
                   <input
                     type="date"
@@ -539,13 +617,13 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Return Date */}
+              {/* Return Date - Only for Round Trip */}
               {tripType === "roundtrip" && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted uppercase tracking-wide">
                     Return
                   </label>
-                  <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
+                  <div className="h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
                     <CalendarIcon />
                     <input
                       type="date"
@@ -557,31 +635,148 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Passengers (for non-roundtrip) */}
-              {tripType !== "roundtrip" && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted uppercase tracking-wide">
-                    Passengers
-                  </label>
+              {/* Passengers */}
+              <div className="space-y-1.5 relative">
+                <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                  Passengers
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassengerPopover(!showPassengerPopover)}
+                  className="w-full h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2 text-left"
+                >
+                  <UserIcon />
+                  <span className="flex-1 text-foreground text-sm">
+                    {adults} Adult{adults > 1 ? "s" : ""}
+                    {children > 0 && `, ${children} Child${children > 1 ? "ren" : ""}`}
+                    {infants > 0 && `, ${infants} Infant${infants > 1 ? "s" : ""}`}
+                  </span>
+                  <ChevronDownIcon />
+                </button>
+                
+                {/* Passenger Popover */}
+                {showPassengerPopover && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-card rounded-xl border border-border shadow-xl z-50 p-4 space-y-4">
+                    {/* Adults */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Adults</p>
+                        <p className="text-xs text-muted">12+ years</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setAdults(Math.max(1, adults - 1))}
+                          disabled={adults <= 1}
+                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <MinusIcon />
+                        </button>
+                        <span className="w-6 text-center font-medium text-foreground">{adults}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAdults(Math.min(9, adults + 1))}
+                          disabled={adults >= 9}
+                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <PlusIcon />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Children */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Children</p>
+                        <p className="text-xs text-muted">2-11 years</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setChildren(Math.max(0, children - 1))}
+                          disabled={children <= 0}
+                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <MinusIcon />
+                        </button>
+                        <span className="w-6 text-center font-medium text-foreground">{children}</span>
+                        <button
+                          type="button"
+                          onClick={() => setChildren(Math.min(9, children + 1))}
+                          disabled={children >= 9}
+                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <PlusIcon />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Infants */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Infants</p>
+                        <p className="text-xs text-muted">Under 2 years</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setInfants(Math.max(0, infants - 1))}
+                          disabled={infants <= 0}
+                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <MinusIcon />
+                        </button>
+                        <span className="w-6 text-center font-medium text-foreground">{infants}</span>
+                        <button
+                          type="button"
+                          onClick={() => setInfants(Math.min(adults, infants + 1))}
+                          disabled={infants >= adults}
+                          className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted hover:text-foreground hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                          <PlusIcon />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Done Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassengerPopover(false)}
+                      className="w-full py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition"
+                    >
+                      Done
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Cabin Class */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                  Cabin Class
+                </label>
+                <div className="relative">
                   <select
-                    value={passengers}
-                    onChange={(e) => setPassengers(Number(e.target.value))}
-                    className="w-full p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition text-foreground outline-none"
+                    value={cabinClass}
+                    onChange={(e) => setCabinClass(e.target.value as any)}
+                    className="w-full h-[52px] px-4 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition text-foreground outline-none appearance-none cursor-pointer pr-10"
                   >
-                    {[1, 2, 3, 4, 5].map((n) => (
-                      <option key={n} value={n}>
-                        {n} {n === 1 ? "Passenger" : "Passengers"}
-                      </option>
-                    ))}
+                    <option value="economy">Economy</option>
+                    <option value="premium_economy">Premium Economy</option>
+                    <option value="business">Business</option>
+                    <option value="first">First Class</option>
                   </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted">
+                    <ChevronDownIcon />
+                  </div>
                 </div>
-              )}
+              </div>
 
               {/* Search Button */}
               <button
                 onClick={handleSearch}
                 disabled={loading}
-                className="px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25 flex items-center gap-2 disabled:opacity-50 mb-0.5"
+                className="h-[52px] px-8 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25 flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <SearchIcon />
                 <span className="hidden sm:inline">{loading ? "Searching..." : "Search"}</span>
