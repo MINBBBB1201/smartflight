@@ -1,8 +1,23 @@
 "use client";
 import { useState, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceDot } from 'recharts';
-import { signInWithGoogle, signOut, handleRedirectResult, auth, onAuthStateChanged } from '../lib/auth';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceDot,
+} from "recharts";
+import {
+  signInWithGoogle,
+  signOut,
+  handleRedirectResult,
+  auth,
+  onAuthStateChanged,
+} from "../lib/auth";
 import type { User } from "firebase/auth";
+import Image from "next/image";
 
 interface PriceAlert {
   id: string;
@@ -12,24 +27,138 @@ interface PriceAlert {
   setDate: string;
 }
 
+// Icons
+const PlaneIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+    />
+  </svg>
+);
+
+const SwapIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+    />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+    />
+  </svg>
+);
+
+const GlobeIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
+
+const destinations = [
+  {
+    city: "Tokyo",
+    country: "Japan",
+    image: "/images/tokyo.jpg",
+    dates: "Mar 15 - Mar 22",
+    price: 489,
+  },
+  {
+    city: "Paris",
+    country: "France",
+    image: "/images/paris.jpg",
+    dates: "Apr 10 - Apr 17",
+    price: 599,
+  },
+  {
+    city: "Bali",
+    country: "Indonesia",
+    image: "/images/bali.jpg",
+    dates: "May 5 - May 12",
+    price: 449,
+  },
+];
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
+  const [tripType, setTripType] = useState<"oneway" | "roundtrip" | "multicity">(
+    "roundtrip"
+  );
   const [from, setFrom] = useState("ICN");
+  const [fromCity, setFromCity] = useState("Seoul");
   const [to, setTo] = useState("NRT");
+  const [toCity, setToCity] = useState("Tokyo");
   const [date, setDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
   const [passengers, setPassengers] = useState(1);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [error, setError] = useState("");
-  const [sortTab, setSortTab] = useState<'price' | 'duration' | 'ai'>('price');
+  const [sortTab, setSortTab] = useState<"price" | "duration" | "ai">("price");
   const [priceChartData, setPriceChartData] = useState<any[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
   const [alertPrice, setAlertPrice] = useState("");
   const [matchedAlert, setMatchedAlert] = useState<PriceAlert | null>(null);
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
-    handleRedirectResult().then(u => { if (u) setUser(u); });
+    handleRedirectResult().then((u) => {
+      if (u) setUser(u);
+    });
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsubscribe();
   }, []);
@@ -37,27 +166,47 @@ export default function Home() {
   useEffect(() => {
     const savedAlerts = localStorage.getItem("priceAlerts");
     if (savedAlerts) {
-      try { setAlerts(JSON.parse(savedAlerts)); }
-      catch { console.error("Failed to load alerts"); }
+      try {
+        setAlerts(JSON.parse(savedAlerts));
+      } catch {
+        console.error("Failed to load alerts");
+      }
     }
   }, []);
 
   const handleSignIn = async () => {
-    try { await signInWithGoogle(); }
-    catch (err) { console.error("로그인 실패:", err); }
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
   };
 
   const handleSignOut = async () => {
-    try { await signOut(); }
-    catch (err) { console.error("로그아웃 실패:", err); }
+    try {
+      await signOut();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
+  const swapLocations = () => {
+    setFrom(to);
+    setFromCity(toCity);
+    setTo(from);
+    setToCity(fromCity);
   };
 
   const handleSearch = async () => {
-    if (!date) { setError("날짜를 선택해주세요"); return; }
+    if (!date) {
+      setError("Please select a departure date");
+      return;
+    }
     setLoading(true);
     setError("");
     setResults([]);
     setMatchedAlert(null);
+    setShowResults(true);
     try {
       const res = await fetch("/api/search", {
         method: "POST",
@@ -70,18 +219,27 @@ export default function Home() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) { setError("API 오류 발생"); return; }
+      if (!res.ok) {
+        setError("API error occurred");
+        return;
+      }
       const offers = data.offers || [];
       setResults(offers);
       if (offers.length > 0) {
         const minPrice = Math.min(...offers.map((o: any) => Number(o.price)));
-        const match = alerts.find(a =>
-          a.from === from.toUpperCase() && a.to === to.toUpperCase() && minPrice <= a.targetPrice
+        const match = alerts.find(
+          (a) =>
+            a.from === from.toUpperCase() &&
+            a.to === to.toUpperCase() &&
+            minPrice <= a.targetPrice
         );
         if (match) setMatchedAlert(match);
       }
-    } catch { setError("서버 연결 실패"); }
-    finally { setLoading(false); }
+    } catch {
+      setError("Server connection failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateDuration = (dep: string, arr: string) => {
@@ -91,12 +249,20 @@ export default function Home() {
 
   const getSortedResults = () => {
     const sorted = [...results];
-    if (sortTab === 'price') return sorted.sort((a, b) => Number(a.price) - Number(b.price));
-    if (sortTab === 'duration') return sorted.sort((a, b) => calculateDuration(a.departure, a.arrival) - calculateDuration(b.departure, b.arrival));
-    if (sortTab === 'ai') return sorted.sort((a, b) => {
-      if ((a.stops ?? 0) !== (b.stops ?? 0)) return (a.stops ?? 0) - (b.stops ?? 0);
-      return Number(a.price) - Number(b.price);
-    });
+    if (sortTab === "price")
+      return sorted.sort((a, b) => Number(a.price) - Number(b.price));
+    if (sortTab === "duration")
+      return sorted.sort(
+        (a, b) =>
+          calculateDuration(a.departure, a.arrival) -
+          calculateDuration(b.departure, b.arrival)
+      );
+    if (sortTab === "ai")
+      return sorted.sort((a, b) => {
+        if ((a.stops ?? 0) !== (b.stops ?? 0))
+          return (a.stops ?? 0) - (b.stops ?? 0);
+        return Number(a.price) - Number(b.price);
+      });
     return sorted;
   };
 
@@ -109,7 +275,7 @@ export default function Home() {
       for (let i = -7; i <= 7; i++) {
         const checkDate = new Date(selectedDate);
         checkDate.setDate(checkDate.getDate() + i);
-        const dateStr = checkDate.toISOString().split('T')[0];
+        const dateStr = checkDate.toISOString().split("T")[0];
         const res = await fetch("/api/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -122,9 +288,14 @@ export default function Home() {
         });
         const data = await res.json();
         if (res.ok && data.offers?.length > 0) {
-          const minPrice = Math.min(...data.offers.map((o: any) => Number(o.price)));
+          const minPrice = Math.min(
+            ...data.offers.map((o: any) => Number(o.price))
+          );
           chartData.push({
-            date: new Date(dateStr).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }),
+            date: new Date(dateStr).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            }),
             price: minPrice,
             fullDate: dateStr,
             isSelected: dateStr === date,
@@ -132,12 +303,18 @@ export default function Home() {
         }
       }
       setPriceChartData(chartData);
-    } catch { } finally { setChartLoading(false); }
+    } catch {
+    } finally {
+      setChartLoading(false);
+    }
   };
 
-  const cheapestDatePoint = priceChartData.length > 0
-    ? priceChartData.reduce((min, curr) => Number(curr.price) < Number(min.price) ? curr : min)
-    : null;
+  const cheapestDatePoint =
+    priceChartData.length > 0
+      ? priceChartData.reduce((min, curr) =>
+          Number(curr.price) < Number(min.price) ? curr : min
+        )
+      : null;
 
   const handleAddAlert = () => {
     if (!alertPrice || isNaN(Number(alertPrice))) return;
@@ -146,7 +323,7 @@ export default function Home() {
       from: from.toUpperCase(),
       to: to.toUpperCase(),
       targetPrice: Number(alertPrice),
-      setDate: new Date().toLocaleDateString('ko-KR'),
+      setDate: new Date().toLocaleDateString("en-US"),
     };
     const updated = [...alerts, newAlert];
     setAlerts(updated);
@@ -155,221 +332,641 @@ export default function Home() {
   };
 
   const handleDeleteAlert = (id: string) => {
-    const updated = alerts.filter(a => a.id !== id);
+    const updated = alerts.filter((a) => a.id !== id);
     setAlerts(updated);
     localStorage.setItem("priceAlerts", JSON.stringify(updated));
   };
 
-  const cheapestDirect = results.filter(f => f.stops === 0)
-    .reduce((min: any, curr) => !min || Number(curr.price) < Number(min.price) ? curr : min, null);
-  const cheapestConnecting = results.filter(f => (f.stops ?? 0) > 0)
-    .reduce((min: any, curr) => !min || Number(curr.price) < Number(min.price) ? curr : min, null);
+  const cheapestDirect = results
+    .filter((f) => f.stops === 0)
+    .reduce(
+      (min: any, curr) =>
+        !min || Number(curr.price) < Number(min.price) ? curr : min,
+      null
+    );
+  const cheapestConnecting = results
+    .filter((f) => (f.stops ?? 0) > 0)
+    .reduce(
+      (min: any, curr) =>
+        !min || Number(curr.price) < Number(min.price) ? curr : min,
+      null
+    );
 
   return (
-    <main className="min-h-screen bg-[#0f172a] text-white flex flex-col items-center py-16 px-4">
-
-      {/* 로그인 버튼 */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-3">
-        {user ? (
-          <>
-            {user.photoURL && <img src={user.photoURL} alt={user.displayName ?? ""} className="w-8 h-8 rounded-full" />}
-            <span className="text-sm text-slate-300">{user.displayName}</span>
-            <button onClick={handleSignOut}
-              className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-sm font-semibold transition">
-              로그아웃
+    <main className="min-h-screen bg-background text-foreground">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <PlaneIcon />
+            </div>
+            <span className="text-xl font-bold text-foreground">SmartFlight</span>
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#" className="text-sm font-medium text-foreground hover:text-primary transition">Home</a>
+            <a href="#" className="text-sm font-medium text-muted hover:text-primary transition">Booking</a>
+            <a href="#" className="text-sm font-medium text-muted hover:text-primary transition">Deals</a>
+            <a href="#" className="text-sm font-medium text-muted hover:text-primary transition">Blog</a>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="flex items-center gap-1 text-sm text-muted hover:text-foreground transition">
+              <GlobeIcon />
+              <span className="hidden sm:inline">EN</span>
             </button>
-          </>
-        ) : (
-          <button onClick={handleSignIn}
-            className="px-4 py-2 rounded-lg bg-white text-gray-800 font-semibold text-sm flex items-center gap-2 hover:bg-gray-100 transition shadow">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Google로 로그인
-          </button>
-        )}
-      </div>
-
-      <h1 className="text-4xl font-bold mb-2">SmartFlight ✈️</h1>
-      <p className="text-slate-400 mb-10">최저가 항공권을 찾아드립니다</p>
-
-      {/* 검색 폼 */}
-      <div className="bg-[#1e293b] rounded-2xl p-6 w-full max-w-2xl space-y-4 shadow-xl">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs text-slate-400 mb-1 block">출발지</label>
-            <input value={from} onChange={(e) => setFrom(e.target.value)}
-              className="w-full p-3 rounded-lg bg-[#0f172a] text-white border border-slate-600" placeholder="ICN" />
-          </div>
-          <div>
-            <label className="text-xs text-slate-400 mb-1 block">도착지</label>
-            <input value={to} onChange={(e) => setTo(e.target.value)}
-              className="w-full p-3 rounded-lg bg-[#0f172a] text-white border border-slate-600" placeholder="NRT" />
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs text-slate-400 mb-1 block">날짜</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-              className="w-full p-3 rounded-lg bg-[#0f172a] text-white border border-slate-600" />
-          </div>
-          <div>
-            <label className="text-xs text-slate-400 mb-1 block">승객</label>
-            <select value={passengers} onChange={(e) => setPassengers(Number(e.target.value))}
-              className="w-full p-3 rounded-lg bg-[#0f172a] text-white border border-slate-600">
-              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}명</option>)}
-            </select>
-          </div>
-        </div>
-        <button onClick={handleSearch} disabled={loading}
-          className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-500 font-semibold transition disabled:opacity-50">
-          {loading ? "검색 중..." : "최저가 항공권 검색"}
-        </button>
-        {error && <p className="text-red-400 text-sm text-center">{error}</p>}
-      </div>
-
-      {/* 결과 */}
-      {results.length > 0 && (
-        <div className="w-full max-w-2xl mt-8 space-y-4">
-          <h2 className="text-lg font-semibold text-slate-300">{results.length}개 결과</h2>
-
-          {matchedAlert && (
-            <div className="p-3 rounded-lg bg-green-600/30 border border-green-400/50 text-green-300 text-sm font-semibold text-center">
-              🔔 {matchedAlert.from}→{matchedAlert.to} 목표가 달성! 현재 최저가 {Math.min(...results.map((o: any) => Number(o.price))).toLocaleString()} USD
-            </div>
-          )}
-
-          {(cheapestDirect || cheapestConnecting) && (
-            <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-slate-400">직항 vs 경유 비교</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {cheapestDirect && (
-                  <div className="bg-blue-900/30 rounded-xl p-4 border border-blue-400/40">
-                    <p className="text-blue-400 font-semibold text-sm mb-2">✈️ 직항</p>
-                    <p className="text-white font-bold text-xl">${Number(cheapestDirect.price).toLocaleString()}</p>
-                    <p className="text-slate-400 text-xs mt-1">{cheapestDirect.airline}</p>
-                    <p className="text-slate-300 text-sm">{cheapestDirect.departure?.slice(11,16)} → {cheapestDirect.arrival?.slice(11,16)}</p>
-                  </div>
+            {user ? (
+              <div className="flex items-center gap-3">
+                {user.photoURL && (
+                  <Image
+                    src={user.photoURL}
+                    alt={user.displayName ?? ""}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
                 )}
-                {cheapestConnecting && (
-                  <div className="bg-amber-900/30 rounded-xl p-4 border border-amber-400/40">
-                    <p className="text-amber-400 font-semibold text-sm mb-2">🔄 경유 ({cheapestConnecting.stops}회)</p>
-                    <p className="text-white font-bold text-xl">${Number(cheapestConnecting.price).toLocaleString()}</p>
-                    <p className="text-slate-400 text-xs mt-1">{cheapestConnecting.airline}</p>
-                    <p className="text-slate-300 text-sm">{cheapestConnecting.departure?.slice(11,16)} → {cheapestConnecting.arrival?.slice(11,16)}</p>
-                  </div>
-                )}
+                <span className="hidden sm:inline text-sm text-muted">
+                  {user.displayName}
+                </span>
+                <button
+                  onClick={handleSignOut}
+                  className="px-4 py-2 rounded-full bg-card border border-border text-sm font-medium hover:bg-border/50 transition"
+                >
+                  Sign Out
+                </button>
               </div>
-              {cheapestDirect && cheapestConnecting && (
-                <div className={`text-center py-2 rounded-lg text-sm font-semibold ${
-                  Number(cheapestDirect.price) <= Number(cheapestConnecting.price)
-                    ? 'bg-blue-600/30 text-blue-300 border border-blue-400/40'
-                    : 'bg-green-600/30 text-green-300 border border-green-400/40'
-                }`}>
-                  {Number(cheapestDirect.price) <= Number(cheapestConnecting.price)
-                    ? '✨ 직항이 더 저렴!'
-                    : `✨ 경유로 $${(Number(cheapestDirect.price) - Number(cheapestConnecting.price)).toLocaleString()} 절약 가능!`}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="flex gap-2 bg-[#1e293b] rounded-lg p-1 border border-slate-700">
-            {(['price','duration','ai'] as const).map(tab => (
-              <button key={tab} onClick={() => setSortTab(tab)}
-                className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition ${
-                  sortTab === tab ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
-                }`}>
-                {tab === 'price' ? '최저가' : tab === 'duration' ? '최단시간' : 'AI 추천'}
+            ) : (
+              <button
+                onClick={handleSignIn}
+                className="px-5 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25"
+              >
+                Sign In
               </button>
-            ))}
-          </div>
-
-          <div className="space-y-3">
-            {getSortedResults().map((offer) => (
-              <div key={offer.id} className="bg-[#1e293b] rounded-xl p-4 flex justify-between items-center border border-slate-700">
-                <div>
-                  <p className="font-bold text-blue-400">{offer.airline ?? "항공사 미상"}</p>
-                  <p className="text-sm text-slate-400">
-                    {offer.departure?.slice(11,16)} → {offer.arrival?.slice(11,16)}
-                    {" · "}{offer.stops === 0 ? "직항" : `${offer.stops}회 경유`}
-                  </p>
-                </div>
-                <p className="text-xl font-bold text-green-400">
-                  {Number(offer.price).toLocaleString()} {offer.currency}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          <button onClick={handlePriceTrend} disabled={chartLoading}
-            className="w-full py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-semibold transition disabled:opacity-50">
-            {chartLoading ? "데이터 로딩 중..." : "가격 추이 보기"}
-          </button>
-
-          <div className="bg-[#1e293b] rounded-xl p-4 border border-slate-700 space-y-3">
-            <h3 className="text-sm font-semibold text-slate-400">🔔 가격 알림 설정</h3>
-            <div className="flex gap-2">
-              <input type="number" value={alertPrice} onChange={(e) => setAlertPrice(e.target.value)}
-                placeholder="목표 가격 (USD)"
-                className="flex-1 p-2 rounded-lg bg-[#0f172a] text-white border border-slate-600 text-sm placeholder-slate-500" />
-              <button onClick={handleAddAlert} disabled={!alertPrice}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition disabled:opacity-50">
-                설정
-              </button>
-            </div>
-            {alerts.length > 0 && (
-              <div className="mt-2 space-y-2">
-                <p className="text-xs text-slate-400">활성 알림 ({alerts.length})</p>
-                {alerts.map(alert => (
-                  <div key={alert.id} className="flex justify-between items-center bg-[#0f172a] p-2 rounded-lg border border-slate-700">
-                    <div className="text-xs">
-                      <p className="text-blue-300 font-semibold">{alert.from}→{alert.to}</p>
-                      <p className="text-slate-400">${alert.targetPrice} USD · {alert.setDate}</p>
-                    </div>
-                    <button onClick={() => handleDeleteAlert(alert.id)}
-                      className="px-2 py-1 rounded bg-red-600/30 hover:bg-red-600/50 text-red-300 text-xs font-semibold transition">
-                      삭제
-                    </button>
-                  </div>
-                ))}
-              </div>
             )}
           </div>
         </div>
-      )}
+      </nav>
 
-      {priceChartData.length > 0 && (
-        <div className="w-full max-w-4xl mt-8 bg-[#1e293b] rounded-2xl p-6 border border-slate-700">
-          <h3 className="text-lg font-semibold text-slate-300 mb-4">가격 추이 (±7일)</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={priceChartData}>
-              <XAxis dataKey="date" stroke="#64748b" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#64748b" style={{ fontSize: '12px' }} label={{ value: 'USD', angle: -90, position: 'insideLeft' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #64748b', borderRadius: '8px' }}
-                formatter={(value) => `$${Number(value).toLocaleString()}`} />
-              <Line type="monotone" dataKey="price" stroke="#3b82f6" strokeWidth={2}
-                dot={{ fill: '#3b82f6', r: 4 }} activeDot={{ r: 6 }} />
-              {priceChartData.map(point => point.isSelected ? (
-                <ReferenceDot key={point.fullDate} x={point.date} y={point.price}
-                  r={6} fill="#06b6d4" stroke="#0891b2" strokeWidth={2} />
-              ) : null)}
-              {cheapestDatePoint && !cheapestDatePoint.isSelected && (
-                <ReferenceDot x={cheapestDatePoint.date} y={cheapestDatePoint.price}
-                  r={6} fill="#10b981" stroke="#059669" strokeWidth={2}
-                  label={{ value: '최저가', position: 'top', fill: '#10b981', fontSize: 12 }} />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
+      {/* Hero Section */}
+      <section className="relative min-h-[90vh] pt-16 overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-accent/10" />
+        <div className="absolute top-1/2 right-0 w-[800px] h-[800px] bg-gradient-radial from-accent/20 via-primary/10 to-transparent rounded-full blur-3xl transform translate-x-1/4 -translate-y-1/2" />
+        
+        <div className="relative max-w-7xl mx-auto px-6 pt-20 lg:pt-32">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Headline */}
+            <div className="space-y-6">
+              <h1 className="text-balance">
+                <span className="block text-4xl md:text-5xl lg:text-6xl font-light text-foreground/80 leading-tight">
+                  Discover New
+                </span>
+                <span className="block text-5xl md:text-6xl lg:text-7xl font-extrabold text-foreground leading-tight">
+                  <span className="text-primary">Horizons</span> Today
+                </span>
+              </h1>
+              <p className="text-lg text-muted max-w-md leading-relaxed">
+                Find the best flight deals worldwide and start your next adventure with confidence. Smart search, better prices.
+              </p>
+            </div>
+            
+            {/* Right: Airplane Image */}
+            <div className="relative lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:w-[55%] lg:h-[600px]">
+              <div className="relative w-full h-[400px] lg:h-full">
+                <Image
+                  src="/images/airplane-hero.jpg"
+                  alt="Airplane"
+                  fill
+                  className="object-contain object-center lg:object-right drop-shadow-2xl"
+                  priority
+                />
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Search Panel */}
+        <div className="relative max-w-5xl mx-auto px-6 mt-12 lg:mt-16">
+          <div className="bg-card rounded-2xl shadow-xl shadow-foreground/5 p-6 border border-border/50">
+            {/* Trip Type Toggle */}
+            <div className="flex gap-2 mb-6">
+              {[
+                { value: "oneway", label: "One Way" },
+                { value: "roundtrip", label: "Round Trip" },
+                { value: "multicity", label: "Multi City" },
+              ].map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => setTripType(type.value as any)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                    tripType === type.value
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-background text-muted hover:text-foreground"
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Fields */}
+            <div className="grid md:grid-cols-[1fr,auto,1fr,1fr,1fr,auto] gap-4 items-end">
+              {/* From */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                  From
+                </label>
+                <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer">
+                  <input
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value.toUpperCase())}
+                    className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
+                    placeholder="ICN"
+                    maxLength={3}
+                  />
+                  <input
+                    value={fromCity}
+                    onChange={(e) => setFromCity(e.target.value)}
+                    className="w-full text-sm text-muted bg-transparent outline-none"
+                    placeholder="Seoul, Korea"
+                  />
+                </div>
+              </div>
+
+              {/* Swap Button */}
+              <button
+                onClick={swapLocations}
+                className="w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center text-muted hover:text-primary hover:border-primary transition mb-3"
+              >
+                <SwapIcon />
+              </button>
+
+              {/* To */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                  To
+                </label>
+                <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition cursor-pointer">
+                  <input
+                    value={to}
+                    onChange={(e) => setTo(e.target.value.toUpperCase())}
+                    className="w-full text-lg font-bold text-foreground bg-transparent outline-none"
+                    placeholder="NRT"
+                    maxLength={3}
+                  />
+                  <input
+                    value={toCity}
+                    onChange={(e) => setToCity(e.target.value)}
+                    className="w-full text-sm text-muted bg-transparent outline-none"
+                    placeholder="Tokyo, Japan"
+                  />
+                </div>
+              </div>
+
+              {/* Departure Date */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                  Departure
+                </label>
+                <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
+                  <CalendarIcon />
+                  <input
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="flex-1 text-foreground bg-transparent outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Return Date */}
+              {tripType === "roundtrip" && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                    Return
+                  </label>
+                  <div className="p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition flex items-center gap-2">
+                    <CalendarIcon />
+                    <input
+                      type="date"
+                      value={returnDate}
+                      onChange={(e) => setReturnDate(e.target.value)}
+                      className="flex-1 text-foreground bg-transparent outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Passengers (for non-roundtrip) */}
+              {tripType !== "roundtrip" && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted uppercase tracking-wide">
+                    Passengers
+                  </label>
+                  <select
+                    value={passengers}
+                    onChange={(e) => setPassengers(Number(e.target.value))}
+                    className="w-full p-3 bg-background rounded-xl border border-border/50 hover:border-primary/50 transition text-foreground outline-none"
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n} {n === 1 ? "Passenger" : "Passengers"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Search Button */}
+              <button
+                onClick={handleSearch}
+                disabled={loading}
+                className="px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/25 flex items-center gap-2 disabled:opacity-50 mb-0.5"
+              >
+                <SearchIcon />
+                <span className="hidden sm:inline">{loading ? "Searching..." : "Search"}</span>
+              </button>
+            </div>
+
+            {error && (
+              <p className="mt-4 text-red-500 text-sm text-center">{error}</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Bar */}
+      <section className="py-16 bg-card border-y border-border/50">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { value: "500+", label: "Destinations" },
+              { value: "50M+", label: "Happy Travelers" },
+              { value: "200+", label: "Airlines" },
+              { value: "4.9", label: "User Rating" },
+            ].map((stat, i) => (
+              <div key={i} className="text-center">
+                <p className="text-3xl md:text-4xl font-bold text-foreground">
+                  {stat.value}
+                </p>
+                <p className="text-sm text-muted mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Search Results */}
+      {showResults && (
+        <section className="py-16 bg-background">
+          <div className="max-w-4xl mx-auto px-6">
+            {results.length > 0 ? (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-bold text-foreground">
+                  {results.length} Flights Found
+                </h2>
+
+                {matchedAlert && (
+                  <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-medium text-center">
+                    Target price reached! {matchedAlert.from} to {matchedAlert.to} - Current lowest: $
+                    {Math.min(
+                      ...results.map((o: any) => Number(o.price))
+                    ).toLocaleString()}{" "}
+                    USD
+                  </div>
+                )}
+
+                {/* Direct vs Connecting Comparison */}
+                {(cheapestDirect || cheapestConnecting) && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-muted uppercase tracking-wide">
+                      Direct vs Connecting
+                    </h3>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {cheapestDirect && (
+                        <div className="bg-card rounded-xl p-5 border border-primary/30 shadow-sm">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <PlaneIcon />
+                            </div>
+                            <span className="text-sm font-semibold text-primary">
+                              Direct Flight
+                            </span>
+                          </div>
+                          <p className="text-3xl font-bold text-foreground">
+                            ${Number(cheapestDirect.price).toLocaleString()}
+                          </p>
+                          <p className="text-sm text-muted mt-1">
+                            {cheapestDirect.airline}
+                          </p>
+                          <p className="text-sm text-foreground mt-2">
+                            {cheapestDirect.departure?.slice(11, 16)} →{" "}
+                            {cheapestDirect.arrival?.slice(11, 16)}
+                          </p>
+                        </div>
+                      )}
+                      {cheapestConnecting && (
+                        <div className="bg-card rounded-xl p-5 border border-amber-300/50 shadow-sm">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                              <SwapIcon />
+                            </div>
+                            <span className="text-sm font-semibold text-amber-600">
+                              {cheapestConnecting.stops} Stop
+                              {cheapestConnecting.stops > 1 ? "s" : ""}
+                            </span>
+                          </div>
+                          <p className="text-3xl font-bold text-foreground">
+                            ${Number(cheapestConnecting.price).toLocaleString()}
+                          </p>
+                          <p className="text-sm text-muted mt-1">
+                            {cheapestConnecting.airline}
+                          </p>
+                          <p className="text-sm text-foreground mt-2">
+                            {cheapestConnecting.departure?.slice(11, 16)} →{" "}
+                            {cheapestConnecting.arrival?.slice(11, 16)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {cheapestDirect && cheapestConnecting && (
+                      <div
+                        className={`text-center py-3 rounded-xl text-sm font-semibold ${
+                          Number(cheapestDirect.price) <=
+                          Number(cheapestConnecting.price)
+                            ? "bg-primary/10 text-primary"
+                            : "bg-green-50 text-green-600"
+                        }`}
+                      >
+                        {Number(cheapestDirect.price) <=
+                        Number(cheapestConnecting.price)
+                          ? "Direct flight is cheaper!"
+                          : `Save $${(
+                              Number(cheapestDirect.price) -
+                              Number(cheapestConnecting.price)
+                            ).toLocaleString()} with connecting flight!`}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Sort Tabs */}
+                <div className="flex gap-1 bg-background rounded-xl p-1 border border-border">
+                  {(["price", "duration", "ai"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setSortTab(tab)}
+                      className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition ${
+                        sortTab === tab
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted hover:text-foreground"
+                      }`}
+                    >
+                      {tab === "price"
+                        ? "Lowest Price"
+                        : tab === "duration"
+                        ? "Shortest"
+                        : "AI Recommended"}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Results List */}
+                <div className="space-y-3">
+                  {getSortedResults().map((offer) => (
+                    <div
+                      key={offer.id}
+                      className="bg-card rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border/50 hover:border-primary/30 hover:shadow-md transition"
+                    >
+                      <div className="flex-1">
+                        <p className="font-bold text-foreground">
+                          {offer.airline ?? "Unknown Airline"}
+                        </p>
+                        <p className="text-sm text-muted mt-1">
+                          {offer.departure?.slice(11, 16)} →{" "}
+                          {offer.arrival?.slice(11, 16)}
+                          {" · "}
+                          {offer.stops === 0
+                            ? "Direct"
+                            : `${offer.stops} stop${offer.stops > 1 ? "s" : ""}`}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-primary">
+                          ${Number(offer.price).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-muted">{offer.currency}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Price Trend Button */}
+                <button
+                  onClick={handlePriceTrend}
+                  disabled={chartLoading}
+                  className="w-full py-3 rounded-xl bg-card border border-border text-foreground text-sm font-medium hover:bg-background transition disabled:opacity-50"
+                >
+                  {chartLoading ? "Loading price trends..." : "View Price Trends"}
+                </button>
+
+                {/* Price Chart */}
+                {priceChartData.length > 0 && (
+                  <div className="bg-card rounded-xl p-6 border border-border/50">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">
+                      Price Trends (±7 days)
+                    </h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={priceChartData}>
+                        <XAxis
+                          dataKey="date"
+                          stroke="#64748b"
+                          style={{ fontSize: "12px" }}
+                        />
+                        <YAxis
+                          stroke="#64748b"
+                          style={{ fontSize: "12px" }}
+                          label={{
+                            value: "USD",
+                            angle: -90,
+                            position: "insideLeft",
+                          }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                          }}
+                          formatter={(value) =>
+                            `$${Number(value).toLocaleString()}`
+                          }
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="price"
+                          stroke="#2563eb"
+                          strokeWidth={2}
+                          dot={{ fill: "#2563eb", r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                        {priceChartData.map((point) =>
+                          point.isSelected ? (
+                            <ReferenceDot
+                              key={point.fullDate}
+                              x={point.date}
+                              y={point.price}
+                              r={6}
+                              fill="#0ea5e9"
+                              stroke="#0891b2"
+                              strokeWidth={2}
+                            />
+                          ) : null
+                        )}
+                        {cheapestDatePoint && !cheapestDatePoint.isSelected && (
+                          <ReferenceDot
+                            x={cheapestDatePoint.date}
+                            y={cheapestDatePoint.price}
+                            r={6}
+                            fill="#10b981"
+                            stroke="#059669"
+                            strokeWidth={2}
+                            label={{
+                              value: "Best",
+                              position: "top",
+                              fill: "#10b981",
+                              fontSize: 12,
+                            }}
+                          />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+
+                {/* Price Alert */}
+                <div className="bg-card rounded-xl p-6 border border-border/50">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">
+                    Set Price Alert
+                  </h3>
+                  <div className="flex gap-3">
+                    <input
+                      type="number"
+                      value={alertPrice}
+                      onChange={(e) => setAlertPrice(e.target.value)}
+                      placeholder="Target price (USD)"
+                      className="flex-1 p-3 rounded-xl bg-background text-foreground border border-border placeholder-muted outline-none focus:border-primary transition"
+                    />
+                    <button
+                      onClick={handleAddAlert}
+                      disabled={!alertPrice}
+                      className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition disabled:opacity-50"
+                    >
+                      Set Alert
+                    </button>
+                  </div>
+                  {alerts.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs text-muted uppercase tracking-wide">
+                        Active Alerts ({alerts.length})
+                      </p>
+                      {alerts.map((alert) => (
+                        <div
+                          key={alert.id}
+                          className="flex justify-between items-center bg-background p-3 rounded-xl border border-border"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">
+                              {alert.from} → {alert.to}
+                            </p>
+                            <p className="text-xs text-muted">
+                              ${alert.targetPrice} USD · {alert.setDate}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteAlert(alert.id)}
+                            className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium transition"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : !loading ? (
+              <div className="text-center py-12">
+                <p className="text-muted">No flights found. Try different dates or destinations.</p>
+              </div>
+            ) : null}
+          </div>
+        </section>
       )}
 
-      {results.length === 0 && !loading && !error && (
-        <p className="mt-12 text-slate-500 text-sm">출발지, 도착지, 날짜를 입력하고 검색해보세요</p>
+      {/* Popular Destinations */}
+      {!showResults && (
+        <section className="py-20 bg-background">
+          <div className="max-w-6xl mx-auto px-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground text-center mb-4">
+              Explore Top Destinations
+            </h2>
+            <p className="text-muted text-center mb-12 max-w-2xl mx-auto">
+              Discover amazing places around the world with our curated selection of popular destinations
+            </p>
+            <div className="grid md:grid-cols-3 gap-6">
+              {destinations.map((dest, i) => (
+                <div
+                  key={i}
+                  className="group relative rounded-2xl overflow-hidden h-80 cursor-pointer transform hover:scale-[1.02] transition duration-300"
+                >
+                  <Image
+                    src={dest.image}
+                    alt={dest.city}
+                    fill
+                    className="object-cover group-hover:scale-110 transition duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <h3 className="text-xl font-bold text-white">
+                          {dest.city}
+                        </h3>
+                        <p className="text-white/70 text-sm">{dest.dates}</p>
+                      </div>
+                      <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                        <p className="text-xs text-muted">Economy From</p>
+                        <p className="text-sm font-bold text-foreground">
+                          USD ${dest.price}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       )}
+
+      {/* Footer */}
+      <footer className="py-12 bg-card border-t border-border/50">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
+                <PlaneIcon />
+              </div>
+              <span className="text-xl font-bold text-foreground">SmartFlight</span>
+            </div>
+            <p className="text-sm text-muted">
+              © 2026 SmartFlight. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
